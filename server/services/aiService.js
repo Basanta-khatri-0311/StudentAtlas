@@ -11,7 +11,7 @@ if (!isMock) {
 
 // Mock embedding
 const mockEmbedding = () => {
-  return Array(10).fill(Math.random());
+  return Array(1536).fill(0).map(() => Math.random());
 };
 
 // Generate embedding

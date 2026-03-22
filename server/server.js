@@ -1,5 +1,5 @@
+require("dotenv").config(); // MUST BE THE FIRST LINE
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
@@ -7,8 +7,6 @@ const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const aiRoutes = require("./routes/aiRoutes");
-
-dotenv.config(); // Load config first!
 
 connectDB(); // Now connect to the DB
 
