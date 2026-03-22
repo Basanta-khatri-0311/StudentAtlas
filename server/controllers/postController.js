@@ -35,3 +35,29 @@ exports.getFeed = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Like / Unlike Post
+exports.toggleLike = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+
+    if (!post.likes) post.likes = []; // Initializing array if it's missing!
+
+    const userId = req.user.id;
+    const alreadyLiked = post.likes.includes(userId);
+
+    if (alreadyLiked) {
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId
+      );
+    } else {
+      post.likes.push(userId);
+    }
+
+    await post.save();
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

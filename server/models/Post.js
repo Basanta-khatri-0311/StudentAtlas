@@ -18,8 +18,9 @@ const postSchema = new mongoose.Schema(
     university: String,
 
     likes: {
-      type: Number,
-      default: 0,
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
     },
   },
   { timestamps: true }
