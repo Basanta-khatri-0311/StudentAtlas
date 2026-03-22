@@ -1,5 +1,8 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
+const { generateEmbedding } = require("../services/aiService");
+
+const Embedding = require("../models/Embedding");
 
 // Create Post
 exports.createPost = async (req, res) => {
