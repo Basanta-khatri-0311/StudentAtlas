@@ -4,301 +4,181 @@ import useAuthStore from "../store/authStore";
 import useThemeStore from "../store/themeStore";
 import { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { Globe, Lock, Mail, Moon, Sun, ArrowRight, Sparkles } from "lucide-react";
+import { Globe, Lock, Mail, Moon, Sun, ArrowRight, Sparkles, User, UserPlus } from "lucide-react";
 
 export default function Login() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
   const setAuth = useAuthStore((state) => state.setAuth);
   const { mode, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
+    
     try {
-      const res = await API.post("/auth/login", { email, password });
+      const endpoint = isLogin ? "/auth/login" : "/auth/register";
+      const payload = isLogin ? { email, password } : { name, email, password };
+      
+      const res = await API.post(endpoint, payload);
       setAuth(res.data.user, res.data.token);
       setAuthToken(res.data.token);
       navigate("/feed");
     } catch (err) {
-      alert("Invalid credentials, please try again.");
+      setError(err.response?.data?.message || "Something went wrong. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}
-    >
-      {/* ── Left Panel: Branding ───────────────────── */}
-      <div
-        className="hidden lg:flex flex-col justify-between w-[46%] p-12 relative overflow-hidden"
-        style={{ background: "var(--bg-secondary)", borderRight: "1px solid var(--border-color)" }}
+    <div className="animate-fade-in" style={{ 
+      background: "var(--bg-primary)", 
+      color: "var(--text-primary)", 
+      minHeight: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      position: "relative",
+      padding: 20
+    }}>
+      {/* Decorative Orbs */}
+      <div style={{
+          position: "absolute",
+          top: "-15%",
+          right: "-5%",
+          width: "600px",
+          height: "600px",
+          background: "radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)",
+          filter: "blur(100px)",
+          zIndex: 0
+      }} />
+
+      <button
+        onClick={toggleTheme}
+        className="btn-icon"
+        style={{ position: "fixed", top: 32, right: 32, zIndex: 10 }}
       >
-        {/* Decorative orb */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-80px",
-            right: "-80px",
-            width: "360px",
-            height: "360px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-60px",
-            left: "-60px",
-            width: "280px",
-            height: "280px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, color-mix(in srgb, var(--green) 14%, transparent), transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
+        {mode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
 
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: "var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Globe size={20} color="#fff" />
+      <div className="panel animate-fade-up" style={{ 
+        width: "100%", 
+        maxWidth: 440, 
+        padding: "48px 40px", 
+        background: "var(--panel-bg)", 
+        position: "relative", 
+        zIndex: 1,
+        boxShadow: "var(--shadow-xl)"
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ 
+            width: 48, 
+            height: 48, 
+            background: "var(--accent)", 
+            borderRadius: 14, 
+            display: "inline-flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            marginBottom: 20,
+            boxShadow: "0 8px 20px var(--accent-glow)"
+          }}>
+            <Globe size={24} color="#fff" />
           </div>
-          <span
-            className="font-display text-lg font-700"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 700, letterSpacing: "-0.02em" }}
-          >
-            Student<span className="gradient-text">Atlas</span>
-          </span>
-        </div>
-
-        {/* Center copy */}
-        <div style={{ animation: "fadeUp 0.6s ease forwards" }}>
-          <div
-            className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={{
-              background: "var(--accent-subtle)",
-              color: "var(--accent)",
-              border: "1px solid var(--accent-muted)",
-            }}
-          >
-            <Sparkles size={12} />
-            Community-powered insights
-          </div>
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: "2.6rem",
-              lineHeight: 1.1,
-              letterSpacing: "-0.04em",
-              marginBottom: "1.2rem",
-            }}
-          >
-            Navigate your
-            <br />
-            student journey
-            <br />
-            <span className="gradient-text">with confidence.</span>
-          </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: 340, lineHeight: 1.7 }}>
-            Real insights from real students who've been where you're going. Find housing, universities, and local
-            knowledge — all in one place.
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 850, fontSize: "1.8rem", letterSpacing: "-0.05em", marginBottom: 8 }}>
+            {isLogin ? "Welcome Back" : "Start Journey"}
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
+            {isLogin ? "Sign in to access your dashboard" : "Join our community of global students"}
           </p>
         </div>
 
-        {/* Stat pills */}
-        <div className="flex gap-4">
-          {[
-            { val: "12k+", label: "Students" },
-            { val: "80+", label: "Countries" },
-            { val: "4.9★", label: "Rated" },
-          ].map(({ val, label }) => (
-            <div
-              key={label}
-              className="panel"
-              style={{ padding: "12px 18px", borderRadius: 12, textAlign: "center" }}
-            >
-              <div
-                style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.1rem", letterSpacing: "-0.02em" }}
-              >
-                {val}
-              </div>
-              <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: 2 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Right Panel: Form ──────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          style={{
-            position: "fixed",
-            top: 24,
-            right: 24,
-            padding: "8px",
-            borderRadius: "50%",
-            border: "1px solid var(--border-color)",
-            background: "var(--panel-bg)",
-            cursor: "pointer",
-            color: "var(--text-secondary)",
-            transition: "all 0.2s ease",
+        {error && (
+          <div style={{ 
+            padding: "12px 16px", 
+            background: "var(--bg-tertiary)", 
+            border: "1px solid #ef444430", 
+            borderRadius: 12, 
+            color: "#ef4444", 
+            fontSize: "0.85rem", 
+            fontWeight: 600, 
+            marginBottom: 24,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
-        >
-          {mode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+            gap: 10
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }} />
+            {error}
+          </div>
+        )}
 
-        {/* Mobile logo */}
-        <div className="lg:hidden flex items-center gap-2 mb-10">
-          <Globe size={22} style={{ color: "var(--accent)" }} />
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.03em" }}>
-            Student<span className="gradient-text">Atlas</span>
-          </span>
-        </div>
-
-        <div style={{ width: "100%", maxWidth: 400, animation: "fadeUp 0.45s ease forwards" }}>
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: "1.9rem",
-              letterSpacing: "-0.04em",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Welcome back
-          </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-            Sign in to access your community feed.
-          </p>
-
-          <form onSubmit={handleLogin}>
-            {/* Email */}
-            <div style={{ marginBottom: "0.9rem", position: "relative" }}>
-              <Mail
-                size={15}
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "var(--text-muted)",
-                  pointerEvents: "none",
-                }}
-              />
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {!isLogin && (
+            <div style={{ position: "relative" }}>
+              <User size={18} style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
               <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Full Name"
                 className="input-field"
-                style={{ paddingLeft: 40 }}
-                required
+                style={{ paddingLeft: 48 }}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required={!isLogin}
               />
             </div>
-
-            {/* Password */}
-            <div style={{ marginBottom: "1.5rem", position: "relative" }}>
-              <Lock
-                size={15}
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "var(--text-muted)",
-                  pointerEvents: "none",
-                }}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: 40, fontFamily: "monospace" }}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary"
-              style={{
-                width: "100%",
-                padding: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                opacity: isLoading ? 0.7 : 1,
-                cursor: isLoading ? "not-allowed" : "pointer",
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <span
-                    style={{
-                      width: 16,
-                      height: 16,
-                      border: "2px solid rgba(255,255,255,0.3)",
-                      borderTopColor: "#fff",
-                      borderRadius: "50%",
-                      display: "inline-block",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  Signing in…
-                </>
-              ) : (
-                <>
-                  Sign In <ArrowRight size={15} />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "1.5rem 0" }}>
-            <div style={{ flex: 1, height: 1, background: "var(--border-color)" }} />
-            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>or</span>
-            <div style={{ flex: 1, height: 1, background: "var(--border-color)" }} />
+          )}
+          
+          <div style={{ position: "relative" }}>
+            <Mail size={18} style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input
+              type="email"
+              placeholder="Email address"
+              className="input-field"
+              style={{ paddingLeft: 48 }}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
-          <p style={{ textAlign: "center", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-            No account yet?{" "}
-            <span
-              style={{ color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+          <div style={{ position: "relative" }}>
+            <Lock size={18} style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input
+              type="password"
+              placeholder="Password"
+              className="input-field"
+              style={{ paddingLeft: 48 }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" disabled={isLoading} className="btn-primary" style={{ width: "100%", marginTop: 8 }}>
+            {isLoading ? (
+              <div style={{ width: 20, height: 20, border: "2px solid #fff3", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            ) : (
+              <> {isLogin ? "Sign In" : "Create Account"} <ArrowRight size={18} /> </>
+            )}
+          </button>
+        </form>
+
+        <div style={{ marginTop: 32, textAlign: "center" }}>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+            {isLogin ? "Don't have an account?" : "Already have an account?"}
+            <button
+              onClick={() => { setIsLogin(!isLogin); setError(""); }}
+              style={{ background: "none", border: "none", color: "var(--accent)", fontWeight: 700, marginLeft: 6, cursor: "pointer" }}
             >
-              Create one — it's free
-            </span>
+              {isLogin ? "Join now" : "Log in here"}
+            </button>
           </p>
         </div>
       </div>
