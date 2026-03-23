@@ -53,6 +53,113 @@ function Avatar({ name, size = 36 }) {
   );
 }
 
+// ─── Settings Modal ──────────────────────────
+function SettingsModal({ isOpen, onClose, user, onUpdate }) {
+  const [profile, setProfile] = useState({
+    country: user?.profile?.country || "",
+    city: user?.profile?.city || "",
+    university: user?.profile?.university || "",
+    intake: user?.profile?.intake || "",
+    budget: user?.profile?.budget || "",
+    status: user?.profile?.status || "Moving soon",
+    skills: user?.profile?.skills?.join(", ") || "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+       const skillsArray = profile.skills.split(",").map(s => s.trim()).filter(s => s !== "");
+       const res = await API.put("/users/profile", { ...profile, skills: skillsArray });
+       onUpdate(res.data.user);
+       onClose();
+    } catch (err) {
+       alert("Failed to update profile");
+    } finally {
+       setIsLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyCenter: "center", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
+       <div className="panel animate-fade-up" style={{ width: "100%", maxWidth: 600, padding: 32, maxHeight: "90vh", overflowY: "auto", margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+             <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 850, fontSize: "1.5rem" }}>Update Profile</h2>
+             <button onClick={onClose} className="btn-icon" style={{ border: "none" }}>✕</button>
+          </div>
+
+          <form onSubmit={handleSave} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>Country</label>
+                <input className="input-field" value={profile.country} onChange={e => setProfile({...profile, country: e.target.value})} />
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>City</label>
+                <input className="input-field" value={profile.city} onChange={e => setProfile({...profile, city: e.target.value})} />
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>University</label>
+                <input className="input-field" value={profile.university} onChange={e => setProfile({...profile, university: e.target.value})} />
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>Intake Year</label>
+                <input className="input-field" value={profile.intake} onChange={e => setProfile({...profile, intake: e.target.value})} />
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>Monthly Budget ($)</label>
+                <input className="input-field" type="number" value={profile.budget} onChange={e => setProfile({...profile, budget: e.target.value})} />
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>Current Status</label>
+                <select className="input-field" value={profile.status} onChange={e => setProfile({...profile, status: e.target.value})}>
+                   <option>Moving soon</option>
+                   <option>Arrived</option>
+                   <option>Studying</option>
+                   <option>Working</option>
+                </select>
+             </div>
+             <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>Key Skills (comma separated)</label>
+                <input className="input-field" placeholder="Coding, Cooking, Driving..." value={profile.skills} onChange={e => setProfile({...profile, skills: e.target.value})} />
+             </div>
+
+             <div style={{ gridColumn: "span 2", marginTop: 24, display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={isLoading} className="btn-primary">
+                   {isLoading ? "Saving..." : "Save Changes"}
+                </button>
+             </div>
+          </form>
+       </div>
+    </div>
+  );
+}
+
+// ─── Profile Progress bar ──────────────────────
+function ProfileProgress({ score }) {
+  const getLevel = (s) => s >= 80 ? "Full Access" : s >= 50 ? "Limited Access" : "Locked Content";
+  const getColor = (s) => s >= 80 ? "var(--green)" : s >= 50 ? "var(--accent)" : "#f43f5e";
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+         <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-muted)" }}>Profile Completion</span>
+         <span style={{ fontSize: "0.75rem", fontWeight: 850, color: getColor(score) }}>{score}%</span>
+      </div>
+      <div style={{ width: "100%", height: 6, background: "var(--bg-tertiary)", borderRadius: 10, overflow: "hidden" }}>
+         <div style={{ width: `${score}%`, height: "100%", background: getColor(score), transition: "width 1s ease-out" }} />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+         <div style={{ width: 6, height: 6, borderRadius: "50%", background: getColor(score) }} />
+         <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)" }}>Status: {getLevel(score)}</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Post Card ─────────────────────────────────
 function PostCard({ post }) {
   const [liked, setLiked] = useState(false);
@@ -142,7 +249,10 @@ export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
   const { mode, toggleTheme } = useThemeStore();
 
@@ -209,10 +319,11 @@ export default function Feed() {
               { icon: <Compass size={20} />, label: "Discover" },
               { icon: <Bell size={20} />, label: "Notifications" },
               { icon: <MessageSquare size={20} />, label: "Messages" },
-              { icon: <Settings size={20} />, label: "Settings" }
+              { icon: <Settings size={20} />, label: "Profile Settings", onClick: () => setIsSettingsOpen(true) }
             ].map((item, i) => (
-              <button key={i} style={{
+              <button key={i} onClick={item.onClick} style={{
                 display: "flex",
+                width: "100%",
                 alignItems: "center",
                 gap: 14,
                 padding: "12px 16px",
@@ -229,6 +340,8 @@ export default function Feed() {
               </button>
             ))}
          </nav>
+
+         <ProfileProgress score={user?.profileScore || 0} />
 
          <div style={{ marginTop: "auto", paddingTop: 24, borderTop: "1px solid var(--border-color)" }}>
            {user && (
@@ -317,6 +430,13 @@ export default function Feed() {
            </aside>
         </div>
       </main>
+
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        user={user}
+        onUpdate={(updatedUser) => setUser(updatedUser)}
+      />
 
       <style>{`
         @media (max-width: 1024px) {

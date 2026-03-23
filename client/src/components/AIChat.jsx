@@ -6,6 +6,7 @@ import useAuthStore from "../store/authStore";
 export default function AIChat() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const user = useAuthStore((state) => state.user);
 
@@ -13,11 +14,13 @@ export default function AIChat() {
     if (!question.trim()) return;
     setIsLoading(true);
     setAnswer("");
+    setSources([]);
     try {
       const res = await API.post("/ai/ask", {
         question,
       });
       setAnswer(res.data.answer);
+      setSources(res.data.sources || []);
     } catch (err) {
       setAnswer("I'm sorry, I couldn't process your request. Please try again later.");
       console.error("AI Error:", err);
@@ -122,6 +125,26 @@ export default function AIChat() {
           <p style={{ fontSize: "0.95rem", lineHeight: 1.6, color: "var(--text-primary)", opacity: 0.9 }}>
             {answer}
           </p>
+
+          {sources.length > 0 && (
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+              <div style={{ fontSize: "0.65rem", fontWeight: 850, color: "var(--text-muted)", letterSpacing: "1px", marginBottom: 12, textTransform: "uppercase" }}>
+                Cited References
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {sources.slice(0, 3).map((source, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{ width: 14, height: 14, borderRadius: 4, background: "var(--accent-soft)", flexShrink: 0, marginTop: 2, display: "flex", alignItems: "center", justifyCenter: "center" }}>
+                       <MessageSquare size={10} color="var(--accent)" />
+                    </div>
+                    <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                       "{source.content}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
